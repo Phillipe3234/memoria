@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Jogo da Memória Romântico - Girassóis & Lilás</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #2e1a47 0%, #6b3e8a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        /* Container principal responsivo */
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(46, 26, 71, 0.7);
+            backdrop-filter: blur(2px);
+            border-radius: 48px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid #f9e79f55;
+        }
+
+        /* ========= PÁGINAS ========= */
+        .page {
+            transition: all 0.3s ease;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* ========= TÍTULOS E TEXTOS ========= */
+        h1, h2 {
+            color: #f9e79f;
+            text-align: center;
+            text-shadow: 2px 2px 4px #2e1a47;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .romantic-text {
+            color: #f9e79f;
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            background: #9b59b655;
+            padding: 12px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Botões principais */
+        .btn {
+            background: linear-gradient(135deg, #f9e79f, #f7dc6f);
+            color: #2e1a47;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 0 #b7950b;
+            margin: 10px;
+            min-width: 160px;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b7950b;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            min-width: auto;
+        }
+
+        /* Grid de cartas */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            justify-items: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        /* Cartas com flip 3D */
+        .card {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background-color: transparent;
+            perspective: 800px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+            border-radius: 16px;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .card-front {
+            background: linear-gradient(145deg, #f9e79f, #f1c40f);
+            transform: rotateY(180deg);
+            font-size: 2rem;
+        }
+
+        .card-front img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .card-back {
+            background: radial-gradient(circle at 30% 20%, #9b59b6, #6b3e8a);
+            border: 3px solid #f9e79f;
+            box-shadow: inset 0 0 10px #f9e79f55;
+            font-size: 2.5rem;
+        }
+
+        .card-back::after {
+            content: "🌻";
+            font-size: 2.2rem;
+            opacity: 0.9;
+        }
+
+        /* Animação de vibração */
+        .card.vibrate {
+            animation: shake 0.3s ease-in-out 0s 2;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Barra superior do jogo */
+        .game-stats {
+            background: #2e1a47cc;
+            padding: 12px;
+            border-radius: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #f9e79f;
+            font-weight: bold;
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-item {
+            background: #6b3e8a;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Fila dos pares acertados (miniaturas) */
+        .matched-track {
+            background: #f9e79f22;
+            border-radius: 32px;
+            padding: 12px;
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            min-height: 70px;
+            border: 1px dashed #f9e79f;
+        }
+
+        .matched-mini {
+            background: #2e1a47;
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 2px 8px gold;
+        }
+
+        .matched-mini img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #f9e79f;
+            max-width: 300px;
+            width: 90%;
+            padding: 24px;
+            border-radius: 40px;
+            position: relative;
+            color: #2e1a47;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Animação girassóis subindo (vitória) */
+        .sunflower-animation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            z-index: 1001;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .floating-sunflower {
+            font-size: 40px;
+            position: absolute;
+            animation: floatUp 2s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-300px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsividade grid (celular sempre 4 colunas) */
+        @media (max-width: 500px) {
+            .game-grid {
+                gap: 8px;
+            }
+            .container {
+                padding: 12px;
+            }
+            .stat-item {
+                font-size: 0.75rem;
+            }
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .record {
+            background: #f1c40f;
+            color: #2e1a47;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <!-- PÁGINA 1: INICIAL -->
+    <div id="pageHome" class="page">
+        <h1>✨ Jogo da Memória Romântico ✨</h1>
+        <div class="romantic-text">
+            🌻 Amor em cada par, diversão em cada rodada! 🌻<br>
+            Encontre os pares e faça girassóis florescerem.
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 30px 0;">
+            <button class="btn" id="startGameBtn">🌸 JOGAR 🌸</button>
+            <button class="btn" id="howToPlayBtn">📖 COMO JOGAR</button>
+        </div>
+    </div>
+
+    <!-- PÁGINA 2: JOGO -->
+    <div id="pageGame" class="page hidden">
+        <div class="game-stats">
+            <div class="stat-item">🌞 Rodada: <span id="roundNumber">1</span></div>
+            <div class="stat-item">✅ Pares: <span id="pairsMatched">0</span>/<span id="totalPairs">3</span></div>
+            <div class="stat-item">⏱️ Tempo: <span id="timer">00:00</span></div>
+            <div class="stat-item">🏆 Vitórias consec: <span id="streak">0</span></div>
+            <div class="stat-item record">⭐ Recorde: <span id="recordStreak">0</span></div>
+        </div>
+        <div class="matched-track" id="matchedTrack">
+            <!-- Miniaturas dos pares acertados aparecerão aqui -->
+            <span style="font-size: 12px;">❤️ Seus pares:</span>
+        </div>
+        <div class="game-grid" id="gameGrid"></div>
+        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 12px;">
+            <button class="btn btn-small" id="backMenuBtnGame">🏠 Menu</button>
+        </div>
+    </div>
+
+    <!-- PÁGINA 3: VITÓRIA -->
+    <div id="pageVictory" class="page hidden">
+        <div style="text-align: center; padding: 20px;">
+            <h2>🎉 VITÓRIA! 🎉</h2>
+            <div class="romantic-text" style="font-size: 1.5rem;">🌻🌻🌻</div>
+            <p style="color:#f9e79f; margin: 20px;">Tempo total: <strong id="finalTime">00:00</strong></p>
+            <p style="color:#f9e79f;">Você completou a rodada com maestria!</p>
+            <div style="margin-top: 30px;">
+                <button class="btn" id="nextRoundBtn">🌻 PRÓXIMA RODADA 🌻</button>
+                <button class="btn" id="menuPrincipalBtn">🏠 MENU PRINCIPAL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===================== CONFIGURAÇÕES DAS IMAGENS (SUBSTITUIR AQUI!) =====================
+    // ARRAY COM 10 IMAGENS - VOCÊ PODE TROCAR OS URLs PARA OUTROS (placeholder romântico)
+    const GIRASSOL_IMAGES = [
+        "imagens/i1.png",  // foto 1
+        "imagens/i2.png",  // foto 2
+        "imagens/i3.png",  // foto 3
+        "imagens/i4.png",  // foto 4
+        "imagens/i5.png",  // foto 5
+        "imagens/i6.png",  // foto 6
+        "imagens/i7.png",  // foto 7
+        "imagens/i8.png",  // foto 8
+        "imagens/i9.png",  // foto 9
+        "imagens/i10.png"   // foto 10
+    ];
+
+    // ESTADO GLOBAL
+    let currentPage = "home";
+    let currentRound = 1;
+    let totalPairsConfig = [3, 4, 5, 6, 7, 8, 9, 10]; // Rodada1=3pares, round2=4...
+    let currentTotalPairs = 3;
+    let cardsData = [];      // array de objetos {id, imageUrl, matched, cardId}
+    let gameCards = [];      // elementos visuais posicionados
+    let flippedCards = [];    // índices atualmente virados
+    let lockBoard = false;
+    let matchedPairsCount = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let consecutiveWins = 0;
+    let recordWins = 0;
+    let currentStreak = 0;    // para vitórias consecutivas (mesmo conceito)
+    
+    // referências DOM
+    const homePage = document.getElementById('pageHome');
+    const gamePage = document.getElementById('pageGame');
+    const victoryPage = document.getElementById('pageVictory');
+    const gameGrid = document.getElementById('gameGrid');
+    const matchedTrackDiv = document.getElementById('matchedTrack');
+    const roundNumberSpan = document.getElementById('roundNumber');
+    const pairsMatchedSpan = document.getElementById('pairsMatched');
+    const totalPairsSpan = document.getElementById('totalPairs');
+    const timerSpan = document.getElementById('timer');
+    const streakSpan = document.getElementById('streak');
+    const recordStreakSpan = document.getElementById('recordStreak');
+    const finalTimeSpan = document.getElementById('finalTime');
+
+    // Helper: formata tempo mm:ss
+    function formatTime(sec) {
+        const mins = Math.floor(sec / 60);
+        const remainSec = sec % 60;
+        return `${mins.toString().padStart(2,'0')}:${remainSec.toString().padStart(2,'0')}`;
+    }
+
+    function updateTimerDisplay() {
+        if(timerSpan) timerSpan.innerText = formatTime(timerSeconds);
+    }
+
+    function startTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if(timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function resetTimer() {
+        stopTimer();
+        timerSeconds = 0;
+        updateTimerDisplay();
+    }
+
+    // Embaralhamento (Fisher-Yates)
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // Gera cartas baseado no número de pares, com imagens distintas (usa imagens rodízio)
+    function generateCards(pairsCount) {
+        // Seleciona imagens únicas: pairsCount pode ser até 10 no máximo
+        let usedImages = [];
+        for(let i=0; i<pairsCount; i++) {
+            let imgIndex = i % GIRASSOL_IMAGES.length;
+            usedImages.push(GIRASSOL_IMAGES[imgIndex]);
+        }
+        // Se houver confusão nas rodadas >=4: adiciona imagens parecidas? (apenas repete imagens com pequena variação? vamos apenas usar as mesmas imagens mas dificuldade progressiva se dá pelo número de cartas)
+        // A dificuldade adicional "confundir" pode ser implementada com imagens parecidas, para simplicidade mas para atender: já que array tem imagens distintas, para confundir pode-se duplicar alguma? Melhor manter da forma original: as imagens repetem par a par mas aumentam quantidade
+        let deck = [];
+        for(let i=0; i<pairsCount; i++) {
+            let imgUrl = usedImages[i];
+            deck.push({ id: i, imageUrl: imgUrl, matched: false, cardUnique: `pair-${i}-a` });
+            deck.push({ id: i, imageUrl: imgUrl, matched: false, cardUnique: `pair-${i}-b` });
+        }
+        return shuffleArray(deck);
+    }
+
+    // Renderizar grid
+    function renderGame() {
+        gameGrid.innerHTML = '';
+        gameCards = [];
+        for(let idx=0; idx<cardsData.length; idx++) {
+            const card = cardsData[idx];
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            if(card.matched) cardDiv.classList.add('flipped'); // para exibir virada permanentemente? na verdade quando matched não deve mostrar no grid? melhor: removemos do grid? Não, o par quando acertado vai para a fila e as cartas somem do grid? Seguindo especificação: "par vai para fila superior". Idealmente ao acertar, as cartas devem desaparecer ou ficar inativas. Nós vamos esconder as cartas do grid ao acertar o par (definir matched=true e remover visualmente)
+            // Mas no padrão jogo da memória, cartas certas somem ou ficam desabilitadas. Vamos fazer: matched == true esconde a carta (ou mostra já resolvida). Para manter fila usaremos a remoção do grid.
+            // Vamos usar matched para remover a carta do grid ao invés de mostrar virada, ficará transparente/ removemos o clique? Vamos esconder completamente adicionando style display none.
+            if(card.matched) {
+                cardDiv.style.display = 'none';
+            }
+            const inner = document.createElement('div');
+            inner.className = 'card-inner';
+            const front = document.createElement('div');
+            front.className = 'card-front';
+            const img = document.createElement('img');
+            img.src = card.imageUrl;
+            img.alt = "romantic";
+            front.appendChild(img);
+            const back = document.createElement('div');
+            back.className = 'card-back';
+            inner.appendChild(back);
+            inner.appendChild(front);
+            cardDiv.appendChild(inner);
+            cardDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(lockBoard) return;
+                if(card.matched) return;
+                if(flippedCards.includes(idx)) return;
+                onCardClick(idx, cardDiv);
+            });
+            gameGrid.appendChild(cardDiv);
+            gameCards.push(cardDiv);
+        }
+    }
+
+    // Animação de embaralhamento inicial: todas as cartas viradas para baixo, nenhum flip adicional, já embaralhadas via generate
+    // Efeito especial: rápido flash
+    function animateShuffle() {
+        return new Promise(resolve => {
+            // pequena animação de tremor nas cartas?
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(c => c.classList.add('vibrate'));
+            setTimeout(() => {
+                allCards.forEach(c => c.classList.remove('vibrate'));
+                resolve();
+            }, 300);
+        });
+    }
+
+    // Atualizar fila de acertos (miniaturas)
+    function updateMatchedTrack() {
+        // Recupera pares acertados (id únicos)
+        let matchedIds = new Set();
+        cardsData.forEach(c => { if(c.matched) matchedIds.add(c.id); });
+        matchedTrackDiv.innerHTML = '<span style="font-size: 12px;">❤️ Seus pares:</span>';
+        for(let id of matchedIds) {
+            let imgUrl = cardsData.find(c => c.id === id).imageUrl;
+            const mini = document.createElement('div');
+            mini.className = 'matched-mini';
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            mini.appendChild(img);
+            matchedTrackDiv.appendChild(mini);
+        }
+    }
+
+    function checkWin() {
+        const totalPairs = currentTotalPairs;
+        if(matchedPairsCount === totalPairs) {
+            // Vitória!
+            stopTimer();
+            const finalSecs = timerSeconds;
+            finalTimeSpan.innerText = formatTime(finalSecs);
+            // Atualiza consecutivas
+            consecutiveWins++;
+            if(consecutiveWins > recordWins) {
+                recordWins = consecutiveWins;
+                recordStreakSpan.innerText = recordWins;
+            }
+            streakSpan.innerText = consecutiveWins;
+            // Exibe animação girassóis (quantidade = vitórias consecutivas)
+            showSunflowerAnimation(consecutiveWins);
+            // Muda para página de vitória
+            showPage('victory');
+        }
+    }
+
+    function showSunflowerAnimation(count) {
+        const animContainer = document.createElement('div');
+        animContainer.className = 'sunflower-animation';
+        document.body.appendChild(animContainer);
+        let limit = Math.min(count, 25);
+        for(let i=0; i<limit; i++) {
+            let flower = document.createElement('div');
+            flower.className = 'floating-sunflower';
+            flower.innerHTML = '🌻';
+            flower.style.left = Math.random() * 100 + '%';
+            flower.style.animationDuration = 1.5 + Math.random() * 1 + 's';
+            flower.style.fontSize = 30 + Math.random() * 30 + 'px';
+            animContainer.appendChild(flower);
+            setTimeout(() => flower.remove(), 2000);
+        }
+        setTimeout(() => animContainer.remove(), 2100);
+    }
+
+    async function onCardClick(idx, cardElement) {
+        if(lockBoard) return;
+        if(cardsData[idx].matched) return;
+        if(flippedCards.includes(idx)) return;
+        // virar carta: adiciona classe flipped
+        cardElement.classList.add('flipped');
+        flippedCards.push(idx);
+        if(flippedCards.length === 2) {
+            lockBoard = true;
+            const idxA = flippedCards[0];
+            const idxB = flippedCards[1];
+            const cardA = cardsData[idxA];
+            const cardB = cardsData[idxB];
+            if(cardA.id === cardB.id && cardA.imageUrl === cardB.imageUrl) {
+                // ACERTOU
+                cardA.matched = true;
+                cardB.matched = true;
+                matchedPairsCount++;
+                pairsMatchedSpan.innerText = matchedPairsCount;
+                // Remove visualmente as cartas do grid
+                const elemA = gameCards[idxA];
+                const elemB = gameCards[idxB];
+                if(elemA) elemA.style.display = 'none';
+                if(elemB) elemB.style.display = 'none';
+                updateMatchedTrack();
+                flippedCards = [];
+                lockBoard = false;
+                checkWin();
+            } else {
+                // Erro: vibra e vira de volta
+                const elemA = gameCards[idxA];
+                const elemB = gameCards[idxB];
+                elemA.classList.add('vibrate');
+                elemB.classList.add('vibrate');
+                setTimeout(() => {
+                    elemA.classList.remove('vibrate');
+                    elemB.classList.remove('vibrate');
+                    elemA.classList.remove('flipped');
+                    elemB.classList.remove('flipped');
+                    flippedCards = [];
+                    lockBoard = false;
+                }, 700);
+            }
+        }
+    }
+
+    // Iniciar nova rodada (embaralha e reseta)
+    async function initRound(round) {
+        stopTimer();
+        resetTimer();
+        // Define total de pares baseado na rodada (progressiva)
+        let totalPairs = 3;
+        if(round <= 8) {
+            totalPairs = [3,4,5,6,7,8,9,10][round-1];
+        } else {
+            totalPairs = 10; // máximo
+        }
+        currentTotalPairs = totalPairs;
+        totalPairsSpan.innerText = currentTotalPairs;
+        matchedPairsCount = 0;
+        pairsMatchedSpan.innerText = "0";
+        flippedCards = [];
+        lockBoard = false;
+        // Gera novo deck
+        cardsData = generateCards(currentTotalPairs);
+        renderGame();
+        await animateShuffle();
+        startTimer();
+        updateMatchedTrack();
+        roundNumberSpan.innerText = round;
+    }
+
+    // Reset consecutivas? Não, consecutivas só aumenta com vitória.
+    function restartGame(firstRoundNumber = 1) {
+        currentRound = firstRoundNumber;
+        consecutiveWins = (firstRoundNumber === 1) ? 0 : consecutiveWins;
+        if(firstRoundNumber === 1) consecutiveWins = 0;
+        streakSpan.innerText = consecutiveWins;
+        recordWins = Math.max(recordWins, consecutiveWins);
+        recordStreakSpan.innerText = recordWins;
+        initRound(currentRound);
+        showPage('game');
+    }
+
+    function nextRound() {
+        currentRound++;
+        initRound(currentRound);
+        showPage('game');
+    }
+
+    function showPage(pageName) {
+        homePage.classList.add('hidden');
+        gamePage.classList.add('hidden');
+        victoryPage.classList.add('hidden');
+        if(pageName === 'home') homePage.classList.remove('hidden');
+        else if(pageName === 'game') gamePage.classList.remove('hidden');
+        else if(pageName === 'victory') victoryPage.classList.remove('hidden');
+        currentPage = pageName;
+    }
+
+    // MODAL
+    function showModal() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3>🌻 Como Jogar 🌻</h3>
+                <p>✨ Encontre os pares de cartas iguais.<br>
+                🌟 Clique em uma carta para virá-la.<br>
+                💕 Se acertar o par, ele vai para a fila superior.<br>
+                ⚡ Se errar, a carta vibra e vira de novo.<br>
+                🧡 Avance de rodada, a dificuldade aumenta!<br>
+                🏆 Ganhe girassóis na vitória!</p>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        const closeModal = () => modalDiv.remove();
+        modalDiv.querySelector('.close-modal').addEventListener('click', closeModal);
+        modalDiv.addEventListener('click', (e) => { if(e.target === modalDiv) closeModal(); });
+    }
+
+    // Eventos e inicialização
+    document.getElementById('startGameBtn').addEventListener('click', () => {
+        consecutiveWins = 0;
+        recordWins = Math.max(recordWins, 0);
+        currentRound = 1;
+        streakSpan.innerText = "0";
+        recordStreakSpan.innerText = recordWins;
+        initRound(1);
+        showPage('game');
+    });
+    document.getElementById('howToPlayBtn').addEventListener('click', showModal);
+    document.getElementById('backMenuBtnGame').addEventListener('click', () => {
+        stopTimer();
+        showPage('home');
+    });
+    document.getElementById('nextRoundBtn').addEventListener('click', nextRound);
+    document.getElementById('menuPrincipalBtn').addEventListener('click', () => {
+        stopTimer();
+        showPage('home');
+    });
+    // Inicializar valores record
+    recordStreakSpan.innerText = "0";
+    streakSpan.innerText = "0";
+    showPage('home');
+</script>
+</body>
+</html>
